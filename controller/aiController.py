@@ -7,8 +7,8 @@ import data.preprocess as preprocess
 
 def init():
     print('AI Module Initializing...')
-    babyNetwork = create.createLayers()
-    thisNetwork = train.startTraining(babyNetwork)
+    babyNetwork = create.create_layers()
+    thisNetwork = train.train(babyNetwork)
     return thisNetwork #optional return
 
 def ask(input,output_raw=False):
@@ -17,7 +17,7 @@ def ask(input,output_raw=False):
         init()
     else:
          print('AI module is present.')
-    output = process.getOutput(input)
+    output = process.get_output_to(input)
     if not output_raw:
         output = process.raw_to_soft_output(output)
     return output
@@ -28,10 +28,10 @@ def ask(input,output_raw=False):
 #     train.furtherTrain(data,label)
 
 def init_repreprocess():
-    preprocess.Samples2Pickles()
+    preprocess.samples_2_pickles()
 
 def getStats():
-    stats = process.getStats()
+    stats = process.get_stats()
     return stats
 
 def raw_to_soft(raw_output):

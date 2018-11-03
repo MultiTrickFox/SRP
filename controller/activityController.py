@@ -41,7 +41,7 @@ def soft2verb(soft):
     return ai.soft_to_response(soft)
 
 def re_eval_pickles():
-    preprocess.Samples2Pickles()
+    preprocess.samples_2_pickles()
 
 def re_init_ai():
     ai.init()

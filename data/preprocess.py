@@ -17,7 +17,7 @@ ratioTrain = 0.8
 ratioDev = 0.1
 ratioTest = 0.1
 
-max_lines_to_read = 7500
+# max_lines_to_read = 7500
 
 min_freq = 0.397  #todos
 max_freq = 0.4026 #todos
@@ -32,7 +32,7 @@ for i in range(1,numClasses+1):
     filesClassSamples.append(currentClassFile)
 
 
-def Samples2Pickles():
+def samples_2_pickles():
     print('Preprocessing samples..')
     
     inputVector = createInputVector()
@@ -123,8 +123,8 @@ def createDataArray(inputVector):
 
 def singleClassToArray(samplesFile, samplesClassification, inputVector):
     currentFeatureSet = []
-    samples = random_sampler(samplesFile, max_lines_to_read)
-    for line in samples:
+    # samples = random_sampler(samplesFile, max_lines_to_read)
+    for line in samplesFile:
         # print(line,'\n') #log dis. to lvl 5
         currentFeatures = np.zeros(len(inputVector))
         line = line.lower()
@@ -219,7 +219,7 @@ def getIOdims():
         inputArray = pickle.load(open(inputArrayPickle,'rb'))
     except:
         print('No Input Vector found.')
-        Samples2Pickles()
+        samples_2_pickles()
         inputArrayPickle = os.path.join(path, "../data/inputArray.pkl")
         inputArray = pickle.load(open(inputArrayPickle,'rb'))
     inputSize = len(inputArray)
@@ -270,3 +270,7 @@ def pickle_load(file_path):
     with open(file_path, "rb") as f:
         return pickle.load(MacOSFile(f))
 
+
+if __name__ == '__main__':
+    samples_2_pickles()
+    print('done.')

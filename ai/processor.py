@@ -7,96 +7,107 @@ import tensorflow as tf
 
 
 def isInit():
-    parentPath = os.path.abspath(os.getcwd())
-    load_dir = os.path.join(parentPath,'../ai/model_saves/')
+    parent_path = os.path.abspath(os.getcwd())
+    load_dir = os.path.join(parent_path, '../ai/model_saves/')
     meta_name = 'my_model.meta'
     load_path = os.path.join(load_dir,meta_name)
-    return os.path.exists(load_path)
+    is_init = os.path.exists(load_path)
+    return is_init
 
 
-def neuralFunction(data,layers):
-    layerOutputs = np.empty(len(layers),object)
+def neural_fn(data, layers):
 
-    for i in range (0,len(layers)):
-        currentWeights = layers[i]['weight']
-        currentBiass = layers[i]['bias']
+    layer_outs = np.empty(len(layers), object)
+
+    for i, layer in enumerate(layers):
+
+        weight = layer['weight']
+        bias = layer['bias']
 
         if i < len(layers)-1:
-            if i == 0:
-                prevOutput = data
-            else:
-                prevOutput = layerOutputs[i-1]
 
-            currentOutput = tf.nn.relu(tf.add(tf.matmul(prevOutput,currentWeights),currentBiass))
-            layerOutputs[i] = currentOutput
+            prev_out = layer_outs[i-1] if i != 0 else data
+            this_out = tf.nn.relu(tf.add(tf.matmul(prev_out, weight), bias))
+
+            layer_outs[i] = this_out
 
         else:
-            prevOutput = layerOutputs[i-1]
-            finalOutput = tf.add(tf.matmul(prevOutput,currentWeights),currentBiass)
-            return finalOutput
+
+            prev_out = layer_outs[i-1]
+            final_out = tf.add(tf.matmul(prev_out, weight), bias)
+
+            return final_out
 
 
-def getOutput(data):
+def get_output_to(data):
+
+    HL_sizes = creator.HL_sizes
+    hm_layers = len(creator.HL_sizes) + 1
     layers = []
 
-    numNodesHLs = creator.numNodesHLs
-    amountLayers = len(creator.numNodesHLs)+1
+    parent_path = os.path.abspath(os.getcwd())
+    load_dir = os.path.join(parent_path, '../ai/model_saves/')
+    load_path = os.path.join(load_dir, 'my_model.meta')
 
-    parentPath = os.path.abspath(os.getcwd())
-    load_dir = os.path.join(parentPath,'../ai/model_saves/')
-    load_path = os.path.join(load_dir,'my_model.meta')
     with tf.Session() as session:
+
+        # LOAD MODEL
 
         loader = tf.train.import_meta_graph(load_path)
         loader.restore(session,tf.train.latest_checkpoint(load_dir))
         graph = tf.get_default_graph()
 
-        for i in range(0, amountLayers-1):
-            nrNodeCurrLayer = numNodesHLs[i]
-            #currentWeight = tf.get_variable('weight_hidden'+str(i)+':0')
-            #currentBias = tf.get_variable('bias_hidden'+str(i)+':0')
-            currentWeight = graph.get_tensor_by_name('weight_hidden'+str(i)+':0')
-            currentBias = graph.get_tensor_by_name('bias_hidden'+str(i)+':0')
+        for i in range(0, hm_layers-1):
 
-            currentHL = {'f_fum':nrNodeCurrLayer,
-                        'weight':currentWeight,
-                        'bias':currentBias
-                        }
-            layers.append(currentHL)
+            layer_size = HL_sizes[i]
 
-        #currentWeight = tf.get_variable('weight_outer:0')
-        #currentBias = tf.get_variable('bias_outer:0')
-        currentWeight = graph.get_tensor_by_name('weight_outer:0')
-        currentBias = graph.get_tensor_by_name('bias_outer:0')
+            # weight = tf.get_variable('weight_hidden'+str(i)+':0')
+            # bias = tf.get_variable('bias_hidden'+str(i)+':0')
+            weight = graph.get_tensor_by_name('weight_hidden'+str(i)+':0')
+            bias = graph.get_tensor_by_name('bias_hidden'+str(i)+':0')
 
-        outputLayer = {'f_fum':None,
-                    'weight':currentWeight,
-                    'bias':currentBias
+            layer = {'f_fum': layer_size,
+                     'weight': weight,
+                     'bias': bias
                     }
-        layers.append(outputLayer)
-        input = tf.placeholder(tf.float32)
 
-        neuralOutput = neuralFunction(input,layers)
-        softOutput = tf.nn.softmax(neuralOutput)
+            layers.append(layer)
 
-        #guarantee_initialized_variables(session)
-        inputData = preprocessor.human2aiConverter(data)
-        output = session.run(softOutput,{input:[inputData]})
-        output = output[0]
+        # weight = tf.get_variable('weight_outer:0')
+        # bias = tf.get_variable('bias_outer:0')
+        weight = graph.get_tensor_by_name('weight_outer:0')
+        bias = graph.get_tensor_by_name('bias_outer:0')
 
-    return output
+        out_layer = {'f_fum': creator.out_size,
+                     'weight': weight,
+                     'bias': bias
+                    }
+
+        layers.append(out_layer)
+
+        # RUN SESSION
+
+        inp = tf.placeholder(tf.float32)
+        neural_output = neural_fn(inp, layers)
+        soft_output = tf.nn.softmax(neural_output)
+        # guarantee_initialized_variables(session)
+
+        output = session.run(soft_output, {inp: [preprocessor.human2aiConverter(data)]})
+
+    return output[0]
 
 
-def getStats():
-    parentPath = os.path.abspath(os.getcwd())
-    load_dir = os.path.join(parentPath,'../ai/model_saves/')
+def get_stats():
+
+    parent_path = os.path.abspath(os.getcwd())
+    load_dir = os.path.join(parent_path, '../ai/model_saves/')
     meta_name = 'my_model.meta'
-    load_path = os.path.join(load_dir,meta_name)
+    load_path = os.path.join(load_dir, meta_name)
 
     with tf.Session() as session:
 
         loader = tf.train.import_meta_graph(load_path)
-        loader.restore(session,tf.train.latest_checkpoint(load_dir))
+        loader.restore(session, tf.train.latest_checkpoint(load_dir))
         graph = tf.get_default_graph()
 
         operations = []
@@ -105,17 +116,22 @@ def getStats():
 
         return operations
 
+
 def raw_to_soft_output(raw):
-    print(raw) #here 4 debug purp
+
+    print(raw)      # todo: remove when done.
+
     with tf.Session() as sess:
+
         _ = tf.constant(raw)
         max_prob = tf.reduce_max(_)
+
         sess.run(tf.global_variables_initializer())
-        softResult = sess.run(max_prob)
-        for classNr in range(0, len(raw)):
-            currentProb = raw[classNr]
-            if str("%.5f" % currentProb)[:4] == str("%.5f" % softResult)[:4]:
-                return classNr
+        result = sess.run(max_prob)
+
+        for class_nr, class_prob in enumerate(raw):
+            if str("%.5f" % class_prob)[:4] == str("%.5f" % result)[:4]:
+                return class_nr
 
 
 def soft_to_speech_output(soft):
