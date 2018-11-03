@@ -1,0 +1,15 @@
+samples/
+.idea/
+__pycache__/
+loss_1.txt
+loss_2.txt
+loss_3.txt
+loss_4.txt
+samples.pkl
+states.txt
+response.txt
+
+
+logs/
+default_library_bin/
+default_local_bin/
